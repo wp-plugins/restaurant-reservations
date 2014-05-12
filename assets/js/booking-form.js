@@ -28,8 +28,17 @@ jQuery(document).ready(function ($) {
 		// Declare datepicker
 		var $date_input = $( '#rtb-date' ).pickadate({
 			format: rtb_pickadate.date_format,
+			formatSubmit: 'yyyy/mm/dd',
+			hiddenName: true,
 			min: true,
 			container: 'body',
+			// this prevents translations from overwriting the start of the
+			// week. ideally, in the future, support for this can be added, but
+			// at the moment I can't figure out how to check the datepicker's
+			// firstDay setting and update my disabled dates values
+			// accordingly.
+			// @todo support start of the week based on language file
+			firstDay: 0, 
 		});
 
 		// Declare timepicker
@@ -39,7 +48,7 @@ jQuery(document).ready(function ($) {
 
 		var datepicker = $date_input.pickadate( 'picker' );
 		var timepicker = $time_input.pickatime( 'picker' );
-		
+
 		if ( typeof datepicker == 'undefined' ) {
 			return;
 		}
@@ -47,6 +56,10 @@ jQuery(document).ready(function ($) {
 		// Pass conditional configuration parameters
 		if ( rtb_pickadate.disable_dates.length ) {
 			datepicker.set( 'disable', rtb_pickadate.disable_dates );
+		}
+		
+		if ( rtb_pickadate.late_bookings === '1440' ) {
+			datepicker.set( 'min', 1 );
 		}
 
 		// Update timepicker on pageload and whenever the datepicker is closed
@@ -65,7 +78,12 @@ jQuery(document).ready(function ($) {
 		timepicker.set( 'enable', false );
 		timepicker.set( 'disable', false );
 
-		var selected_date = new Date( datepicker.get() );
+		if ( datepicker.get() === '' ) {
+			timepicker.set( 'disable', true );
+			return;
+		}
+
+		selected_date = new Date( datepicker.get( 'select', 'yyyy/mm/dd' ) );
 		var selected_date_year = selected_date.getFullYear();
 		var selected_date_month = selected_date.getMonth();
 		var selected_date_date = selected_date.getDate();

@@ -3,13 +3,13 @@
  * Plugin Name: Restaurant Reservations
  * Plugin URI: http://themeofthecrop.com
  * Description: Accept restaurant reservations and bookings online.
- * Version: 1.0.2
+ * Version: 1.1
  * Author: Theme of the Crop
  * Author URI: http://themeofthecrop.com
  * License:     GNU General Public License v2.0 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 3.8
- * Tested up to: 3.9
+ * Tested up to: 3.9.1
  *
  * Text Domain: rtbdomain
  * Domain Path: /languages/
@@ -235,6 +235,24 @@ class rtbInit {
 
 		if ( !RTB_LOAD_FRONTEND_ASSETS ) {
 			return;
+		}
+
+		wp_register_style( 'pickadate-default', RTB_PLUGIN_URL . '/lib/simple-admin-pages/lib/pickadate/themes/default.css' );
+		wp_register_style( 'pickadate-date', RTB_PLUGIN_URL . '/lib/simple-admin-pages/lib/pickadate/themes/default.date.css' );
+		wp_register_style( 'pickadate-time', RTB_PLUGIN_URL . '/lib/simple-admin-pages/lib/pickadate/themes/default.time.css' );
+		wp_register_script( 'pickadate', RTB_PLUGIN_URL . '/lib/simple-admin-pages/lib/pickadate/picker.js', array( 'jquery' ), '', true );
+		wp_register_script( 'pickadate-date', RTB_PLUGIN_URL . '/lib/simple-admin-pages/lib/pickadate/picker.date.js', array( 'jquery' ), '', true );
+		wp_register_script( 'pickadate-time', RTB_PLUGIN_URL . '/lib/simple-admin-pages/lib/pickadate/picker.time.js', array( 'jquery' ), '', true );
+		wp_register_script( 'pickadate-legacy', RTB_PLUGIN_URL . '/lib/simple-admin-pages/lib/pickadate/legacy.js', array( 'jquery' ), '', true );
+		
+		$i8n = $this->settings->get_setting( 'i8n' );
+		if ( !empty( $i8n ) ) {
+			wp_register_script( 'pickadate-i8n', RTB_PLUGIN_URL . '/lib/simple-admin-pages/lib/pickadate/translations/' . esc_attr( $i8n ) . '.js', array( 'jquery' ), '', true );
+			
+			// Arabic and Hebrew are right-to-left languages
+			if ( $i8n == 'ar' || $i8n == 'he_IL' ) {
+				wp_register_style( 'pickadate-rtl', RTB_PLUGIN_URL . '/lib/simple-admin-pages/lib/pickadate/themes/rtl.css' );
+			}
 		}
 
 		wp_register_style( 'rtb-booking-form', RTB_PLUGIN_URL . '/assets/css/booking-form.css' );

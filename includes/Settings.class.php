@@ -20,6 +20,49 @@ class rtbSettings {
 	 * @since 0.0.1
 	 */
 	public $settings = array();
+	
+	/**
+	 *
+	 */
+	public $supported_i8n = array(
+		'ar'	=> 'ar',
+		'bg_BG'	=> 'bg_BG',
+		'bs_BA'	=> 'bs_BA',
+		'ca_ES'	=> 'ca_ES',
+		'cs_CZ'	=> 'cs_CZ',
+		'da_DK'	=> 'da_DK',
+		'de_DE'	=> 'de_DE',
+		'el_GR'	=> 'el_GR',
+		'es_ES'	=> 'es_ES',
+		'et_EE'	=> 'et_EE',
+		'eu_ES'	=> 'eu_ES',
+		'fi_FI'	=> 'fi_FI',
+		'fr_FR'	=> 'fr_FR',
+		'gl_ES'	=> 'gl_ES',
+		'he_IL'	=> 'he_IL',
+		'hr_HR'	=> 'hr_HR',
+		'hu_HU'	=> 'hu_HU',
+		'id_ID'	=> 'id_ID',
+		'is_IS'	=> 'is_IS',
+		'it_IT'	=> 'it_IT',
+		'ja_JP'	=> 'ja_JP',
+		'ko_KR'	=> 'ko_KR',
+		'nl_NL'	=> 'nl_NL',
+		'no_NO'	=> 'no_NO',
+		'pl_PL'	=> 'pl_PL',
+		'pt_BR'	=> 'pt_BR',
+		'pt_PT'	=> 'pt_PT',
+		'ro_RO'	=> 'ro_RO',
+		'ru_RU'	=> 'ru_RU',
+		'sk_SK'	=> 'sk_SK',
+		'sl_SI'	=> 'sl_SI',
+		'sv_SE'	=> 'sv_SE',
+		'th_TH'	=> 'th_TH',
+		'tr_TR'	=> 'tr_TR',
+		'uk_UA'	=> 'uk_UA',
+		'zh_CN'	=> 'zh_CN',
+		'zh_TW'	=> 'zh_TW',
+	);
 
 	public function __construct() {
 
@@ -122,6 +165,11 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 				RTB_TEXTDOMAIN
 			),
 		);
+		
+		$i8n = get_bloginfo( 'language' );
+		if ( array_key_exists( $i8n, $this->supported_i8n ) ) {
+			$this->defaults['i8n'] = $i8n;
+		}
 
 		$this->defaults = apply_filters( 'rtb_defaults', $this->defaults );
 	}
@@ -171,14 +219,14 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 				'parent_menu'	=> 'rtb-bookings',
 				'description'   => '',
 				'capability'    => 'manage_options',
-				'default_tab'   => 'general',
+				'default_tab'   => 'rtb-general',
 			)
 		);
 
 		$sap->add_section(
 			'rtb-settings',
 			array(
-				'id'            => 'general',
+				'id'            => 'rtb-general',
 				'title'         => __( 'General', RTB_TEXTDOMAIN ),
 				'is_tab'		=> true,
 			)
@@ -186,7 +234,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'general',
+			'rtb-general',
 			'post',
 			array(
 				'id'            => 'booking-page',
@@ -203,7 +251,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'general',
+			'rtb-general',
 			'textarea',
 			array(
 				'id'			=> 'success-message',
@@ -215,7 +263,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'general',
+			'rtb-general',
 			'text',
 			array(
 				'id'            => 'date-format',
@@ -227,7 +275,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'general',
+			'rtb-general',
 			'text',
 			array(
 				'id'            => 'time-format',
@@ -237,10 +285,25 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 			)
 		);
 
+		// Add i8n setting for pickadate if the frontend assets are to be loaded
+		if ( RTB_LOAD_FRONTEND_ASSETS ) {
+			$sap->add_setting(
+				'rtb-settings',
+				'rtb-general',
+				'select',
+				array(
+					'id'            => 'i8n',
+					'title'         => __( 'Language', RTB_TEXTDOMAIN ),
+					'description'   => __( 'Select a language to use for the booking form datepicker if it is different than your WordPress language setting.', RTB_TEXTDOMAIN ),
+					'options'		=> $this->supported_i8n,
+				)
+			);
+		}
+
 		$sap->add_section(
 			'rtb-settings',
 			array(
-				'id'            => 'schedule',
+				'id'            => 'rtb-schedule',
 				'title'         => __( 'Booking Schedule', RTB_TEXTDOMAIN ),
 				'is_tab'		=> true,
 			)
@@ -248,7 +311,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'schedule',
+			'rtb-schedule',
 			'scheduler',
 			array(
 				'id'			=> 'schedule-open',
@@ -272,7 +335,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'schedule',
+			'rtb-schedule',
 			'scheduler',
 			array(
 				'id'				=> 'schedule-closed',
@@ -290,7 +353,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'schedule',
+			'rtb-schedule',
 			'select',
 			array(
 				'id'            => 'early-bookings',
@@ -310,7 +373,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'schedule',
+			'rtb-schedule',
 			'select',
 			array(
 				'id'            => 'late-bookings',
@@ -319,10 +382,12 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 				'blank_option'	=> false,
 				'options'       => array(
 					'' 		=> __( 'Up to the last minute', RTB_TEXTDOMAIN ),
-					'15' 	=> __( 'Up to 15 minutes in advance', RTB_TEXTDOMAIN ),
-					'30' 	=> __( 'Up to 30 minutes in advance', RTB_TEXTDOMAIN ),
-					'45' 	=> __( 'Up to 45 minutes in advance', RTB_TEXTDOMAIN ),
-					'60' 	=> __( 'Up to 1 hour in advance', RTB_TEXTDOMAIN ),
+					'15' 	=> __( 'At least 15 minutes in advance', RTB_TEXTDOMAIN ),
+					'30' 	=> __( 'At least 30 minutes in advance', RTB_TEXTDOMAIN ),
+					'45' 	=> __( 'At least 45 minutes in advance', RTB_TEXTDOMAIN ),
+					'60' 	=> __( 'At least 1 hour in advance', RTB_TEXTDOMAIN ),
+					'240' 	=> __( 'At least 4 hours in advance', RTB_TEXTDOMAIN ),
+					'1440' 	=> __( 'At least 1 day in advance', RTB_TEXTDOMAIN ),
 				)
 			)
 		);
@@ -330,7 +395,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 		$sap->add_section(
 			'rtb-settings',
 			array(
-				'id'            => 'notifications',
+				'id'            => 'rtb-notifications',
 				'title'         => __( 'Notifications', RTB_TEXTDOMAIN ),
 				'is_tab'		=> true,
 			)
@@ -338,7 +403,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications',
+			'rtb-notifications',
 			'text',
 			array(
 				'id'			=> 'reply-to-name',
@@ -350,7 +415,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications',
+			'rtb-notifications',
 			'text',
 			array(
 				'id'			=> 'reply-to-address',
@@ -362,7 +427,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications',
+			'rtb-notifications',
 			'toggle',
 			array(
 				'id'			=> 'admin-email-option',
@@ -373,7 +438,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications',
+			'rtb-notifications',
 			'text',
 			array(
 				'id'			=> 'admin-email-address',
@@ -386,9 +451,9 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 		$sap->add_section(
 			'rtb-settings',
 			array(
-				'id'            => 'notifications-templates',
+				'id'            => 'rtb-notifications-templates',
 				'title'         => __( 'Email Templates', RTB_TEXTDOMAIN ),
-				'tab'			=> 'notifications',
+				'tab'			=> 'rtb-notifications',
 				'description'	=> 'Adjust the messages that are emailed to users and admins during the booking process.',
 			)
 		);
@@ -397,7 +462,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 		//	can easily add/edit without conflicting with each other.
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications-templates',
+			'rtb-notifications-templates',
 			'html',
 			array(
 				'id'			=> 'template-tags-description',
@@ -436,7 +501,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications-templates',
+			'rtb-notifications-templates',
 			'text',
 			array(
 				'id'			=> 'subject-booking-admin',
@@ -448,7 +513,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications-templates',
+			'rtb-notifications-templates',
 			'editor',
 			array(
 				'id'			=> 'template-booking-admin',
@@ -460,7 +525,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications-templates',
+			'rtb-notifications-templates',
 			'text',
 			array(
 				'id'			=> 'subject-booking-user',
@@ -472,7 +537,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications-templates',
+			'rtb-notifications-templates',
 			'editor',
 			array(
 				'id'			=> 'template-booking-user',
@@ -484,7 +549,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications-templates',
+			'rtb-notifications-templates',
 			'text',
 			array(
 				'id'			=> 'subject-confirmed-user',
@@ -496,7 +561,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications-templates',
+			'rtb-notifications-templates',
 			'editor',
 			array(
 				'id'			=> 'template-confirmed-user',
@@ -508,7 +573,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications-templates',
+			'rtb-notifications-templates',
 			'text',
 			array(
 				'id'			=> 'subject-rejected-user',
@@ -520,7 +585,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 
 		$sap->add_setting(
 			'rtb-settings',
-			'notifications-templates',
+			'rtb-notifications-templates',
 			'editor',
 			array(
 				'id'			=> 'template-rejected-user',
