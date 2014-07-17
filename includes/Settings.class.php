@@ -20,9 +20,9 @@ class rtbSettings {
 	 * @since 0.0.1
 	 */
 	public $settings = array();
-	
+
 	/**
-	 *
+	 * Languages supported by the pickadate library
 	 */
 	public $supported_i8n = array(
 		'ar'	=> 'ar',
@@ -83,6 +83,7 @@ class rtbSettings {
 			'success-message'				=> _x( 'Thanks, your booking request is waiting to be confirmed. Updates will be sent to the email address you provided.', RTB_TEXTDOMAIN ),
 			'date-format'					=> _x( 'mmmm d, yyyy', 'Default date format for display. Must match formatting rules at http://amsul.ca/pickadate.js/date.htm#formatting-rules', RTB_TEXTDOMAIN ),
 			'time-format'					=> _x( 'h:i A', 'Default time format for display. Must match formatting rules at http://amsul.ca/pickadate.js/time.htm#formats', RTB_TEXTDOMAIN ),
+			'time-interval'					=> _x( '30', 'Default interval in minutes when selecting a time.', RTB_TEXTDOMAIN ),
 
 			// Email address where admin notifications should be sent
 			'admin-email-address'			=> get_option( 'admin_email' ),
@@ -165,8 +166,8 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 				RTB_TEXTDOMAIN
 			),
 		);
-		
-		$i8n = get_bloginfo( 'language' );
+
+		$i8n = str_replace( '-', '_', get_bloginfo( 'language' ) );
 		if ( array_key_exists( $i8n, $this->supported_i8n ) ) {
 			$this->defaults['i8n'] = $i8n;
 		}
@@ -246,6 +247,18 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 					'posts_per_page'	=> -1,
 					'post_status'		=> 'publish',
 				),
+			)
+		);
+
+		$sap->add_setting(
+			'rtb-settings',
+			'rtb-general',
+			'text',
+			array(
+				'id'            => 'party-size',
+				'title'         => __( 'Max Party Size', RTB_TEXTDOMAIN ),
+				'description'   => __( 'Set a maximum allowed party size for bookings. Leave it empty to allow parties of any size.', RTB_TEXTDOMAIN ),
+				'placeholder'	=> __( 'No limit', RTB_TEXTDOMAIN ),
 			)
 		);
 
@@ -392,6 +405,40 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 			)
 		);
 
+		$sap->add_setting(
+			'rtb-settings',
+			'rtb-schedule',
+			'select',
+			array(
+				'id'			=> 'date-onload',
+				'title'			=> __( 'Date Pre-selection', RTB_TEXTDOMAIN ),
+				'description'	=> __( 'When the booking form is loaded, should it automatically attempt to select a valid date?', RTB_TEXTDOMAIN ),
+				'blank_option'	=> false,
+				'options'       => array(
+					'' 			=> __( 'Select today or soonest valid date', RTB_TEXTDOMAIN ),
+					'empty' 	=> __( 'Leave empty', RTB_TEXTDOMAIN ),
+				)
+			)
+		);
+
+		$sap->add_setting(
+			'rtb-settings',
+			'rtb-schedule',
+			'select',
+			array(
+				'id'			=> 'time-interval',
+				'title'			=> __( 'Time Interval', RTB_TEXTDOMAIN ),
+				'description'	=> __( 'Select the number of minutes between each available time.', RTB_TEXTDOMAIN ),
+				'blank_option'	=> false,
+				'options'       => array(
+					'' 			=> __( 'Every 30 minutes', RTB_TEXTDOMAIN ),
+					'15' 		=> __( 'Every 15 minutes', RTB_TEXTDOMAIN ),
+					'10' 		=> __( 'Every 10 minutes', RTB_TEXTDOMAIN ),
+					'5' 		=> __( 'Every 5 minutes', RTB_TEXTDOMAIN ),
+				)
+			)
+		);
+
 		$sap->add_section(
 			'rtb-settings',
 			array(
@@ -477,6 +524,12 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 					</div>
 					<div class="rtb-template-tags-box">
 						<strong>{date}</strong> ' . __( 'Date and time of the booking', RTB_TEXTDOMAIN ) . '
+					</div>
+					<div class="rtb-template-tags-box">
+						<strong>{phone}</strong> ' . __( 'Phone number if supplied with the request', RTB_TEXTDOMAIN ) . '
+					</div>
+					<div class="rtb-template-tags-box">
+						<strong>{message}</strong> ' . __( 'Message added to the request', RTB_TEXTDOMAIN ) . '
 					</div>
 					<div class="rtb-template-tags-box">
 						<strong>{bookings_link}</strong> ' . __( 'A link to the admin panel showing pending bookings', RTB_TEXTDOMAIN ) . '
