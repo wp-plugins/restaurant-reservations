@@ -3,7 +3,7 @@
  * Plugin Name: Restaurant Reservations
  * Plugin URI: http://themeofthecrop.com
  * Description: Accept restaurant reservations and bookings online.
- * Version: 1.2.1
+ * Version: 1.2.2
  * Author: Theme of the Crop
  * Author URI: http://themeofthecrop.com
  * License:     GNU General Public License v2.0 or later
@@ -91,6 +91,15 @@ class rtbInit {
 
 		// Add links to plugin listing
 		add_filter('plugin_action_links', array( $this, 'plugin_action_links' ), 10, 2);
+
+		// Add the addons page
+		require_once( RTB_PLUGIN_DIR . '/includes/Addons.class.php' );
+		new rtbAddons(
+			array(
+				'api_url'	=> 'http://api.themeofthecrop.com/addons/',
+				'plugin'	=> basename( plugin_dir_path( __FILE__ ) ),
+			)
+		);
 
 	}
 
@@ -221,7 +230,7 @@ class rtbInit {
 	public function enqueue_admin_assets() {
 
 		$screen = get_current_screen();
-		if ( $screen->base == 'toplevel_page_rtb-bookings' || $screen->base == 'bookings_page_rtb-settings' ) {
+		if ( $screen->base == 'toplevel_page_rtb-bookings' || $screen->base == 'bookings_page_rtb-settings' || $screen->base == 'bookings_page_rtb-addons' ) {
 			wp_enqueue_style( 'rtb-admin', RTB_PLUGIN_URL . '/assets/css/admin.css' );
 			wp_enqueue_script( 'rtb-admin', RTB_PLUGIN_URL . '/assets/js/admin.js', array( 'jquery' ), '', true );
 		}
