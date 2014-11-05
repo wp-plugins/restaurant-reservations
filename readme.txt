@@ -3,9 +3,9 @@ Contributors: NateWr
 Author URI: https://github.com/NateWr
 Plugin URL: http://themeofthecrop.com
 Requires at Least: 3.8
-Tested Up To: 3.9.1
+Tested Up To: 4.0
 Tags: restaurant, reservations, bookings, table bookings, restaurant reservation, table reservation
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv2 or later
 Donate link: http://themeofthecrop.com
 
@@ -31,8 +31,8 @@ This plugin is part of a group of plugins for restaurants. Check out the [Food a
 
 There is a short guide to using the plugin in the /docs/ folder. It can be accessed by following the Help link listed under the plugin on the Plugins page in your WordPress admin area. Not sure where that is? One of the [screenshots](http://wordpress.org/plugins/restaurant-reservations/screenshots/) for this plugin will show you where to find it.
 
-= MailChimp addon beta =
-A commercial addon for this plugin is in development that will allow you to subscribe new reservations to your MailChimp mailing list. The plugin is currently in a short beta period before release. I'm offering a free license to anyone who participates. [Learn more](http://themeofthecrop.com/2014/08/18/mailchimp-restaurant-reservations-ready-beta/).
+= Addons =
+[MailChimp for Restaurant Reservations](http://themeofthecrop.com/plugin/mailchimp-restaurant-reservations/?utm_source=Plugin&utm_medium=Plugin%20Description&utm_campaign=Restaurant%20Reservations) - Subscribe emails from new restaurant reservations to your MailChimp mailing list.
 
 = Developers =
 
@@ -44,6 +44,38 @@ This plugin is packed with hooks so you can extend it, customize it and rebrand 
 2. Upload the contents of `restaurant-reservations.zip` to the `/wp-content/plugins/` directory
 3. Activate the plugin through the 'Plugins' menu in WordPress
 4. Go to Bookings > Settings to set up the page to display your booking form.
+
+== Frequently Asked Questions ==
+
+= Is there a shortcode to print the booking form? =
+
+Yes, use the `[booking-form]` shortcode.
+
+= Can I change the format of the date or time? =
+
+Yes, set the format for the datepicker in *Bookings > Settings*. The format used in the backend will depend on the date and time formats in your WordPress settings.
+
+= The datepicker or timepicker is not working. =
+
+If you load up the form and no date or time picker is popping up when you select those fields, this is likely caused by a Javascript error from another plugin or theme. You can find the problematic plugin by deactivating other plugins you're using one-by-one. Test after each deactivation to see if the date and time pickers work.
+
+If you have deactivated all other plugins and still have a problem, try switching to a default theme (one of the TwentySomething themes).
+
+= I'm not receiving notification emails for new bookings. =
+
+This is almost always the result of issues with your server and can be caused by a number of things. Before posting a support request, please run through the following checklist:
+
+1. Double-check that the notification email in *Bookings > Settings > Notifications* is correct.
+2. Make sure that WordPress is able to send emails. The admin email address in the WordPress settings page should receive notifications of new users.
+3. If you're not able to receive regular WordPress emails, contact your web host and ask them for help sorting it out.
+4. If you're able to receive regular WordPress emails but not booking notifications, check your spam filters or junk mail folders.
+5. If you still haven't found the emails, contact your web host and let them know the date, time and email address where you expected to receive a booking. They should be able to check their logs to see what is happening to the email.
+
+= Can I translate the booking form? =
+
+Yes, everything in this plugin can be translated using the standard translation process and software like PoEdit. If you're not familiar with that process, I'd recommend you take a look at the [Loco Translate](https://wordpress.org/plugins/loco-translate/) plugin, which provides a simple interface in your WordPress admin area for translating themes and plugins.
+
+If you make a translation, please help others out by adding it to the [GitHub repository](https://github.com/NateWr/restaurant-reservations) so that I can distribute it for others.
 
 == Screenshots ==
 
@@ -58,6 +90,15 @@ This plugin is packed with hooks so you can extend it, customize it and rebrand 
 9. Access a short guide from your Plugins list to help you get started quickly.
 
 == Changelog ==
+
+= 1.2.3 (2014-11-04) =
+* Add a {user_email} notification template tag
+* Add filter to notification template tag descriptions for extensions
+* Add Reply-To mail headers and use a more reliable From header
+* Add filter to the datepicker rules for disabled dates
+* Fix: missing "Clear" button translation in time picker for many languages
+* Fix: open time picker in body container to mitigate rare positioning bugs
+* Fix: don't auto-select today's date if it's not a valid date or errors are attached to the date field
 
 = 1.2.2 (2014-08-24) =
 * Fix: custom date formats can break date validation for new bookings
@@ -108,6 +149,9 @@ This plugin is packed with hooks so you can extend it, customize it and rebrand 
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.2.3 =
+This update adds a {user_email} notification template tag and improves the mail headers on notifications to mitigate spam risk. It also adds the missing translation for the Clear button in the time picker for many languages. More minor bug fixes listed in the changelog.
 
 = 1.2.2 =
 This update adds support for a new MailChimp addon that will be released soon. An addons page is now available under the Bookings menu. A bug in which custom date/time formats could cause validation errors has been fixed. New hooks are now in place so that it's easier to customize the form output. 

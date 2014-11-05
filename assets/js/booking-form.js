@@ -50,6 +50,7 @@ jQuery(document).ready(function ($) {
 			formatSubmit: 'h:i A',
 			hiddenName: true,
 			interval: parseInt( rtb_pickadate.time_interval, 10 ),
+			container: 'body',
 
 			// Select the value when loaded if a value has been set
 			onStart: function() {
@@ -95,10 +96,19 @@ jQuery(document).ready(function ($) {
 			datepicker.set( 'min', 1 );
 		}
 
-		// If no date has been set, select today's date or the soonest valid
+		// If no date has been set, select today's date if it's a valid
 		// date. User may opt not to do this in the settings.
-		if ( rtb_pickadate.date_onload !== 'empty' && $( '#rtb-date' ).val() === '' ) {
-			datepicker.set( 'select', new Date() );
+		if ( $( '#rtb-date' ).val() === '' && !$( '.rtb-booking-form .date .rtb-error' ).length ) {
+
+			if ( rtb_pickadate.date_onload == 'soonest' ) {
+				datepicker.set( 'select', new Date() );
+			} else if ( rtb_pickadate.date_onload !== 'empty' ) {
+				var dateToVerify = datepicker.component.create( new Date() );
+				var isDisabled = datepicker.component.disabled( dateToVerify );
+				if ( !isDisabled ) {
+					datepicker.set( 'select', dateToVerify );
+				}
+			}
 		}
 
 		// Update timepicker on pageload and whenever the datepicker is closed

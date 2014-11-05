@@ -100,8 +100,13 @@ class rtbNotificationEmail extends rtbNotification {
 
 		global $rtb_controller;
 
-		$this->from_email = $rtb_controller->settings->get_setting( 'reply-to-address' );
-		$this->from_name = $rtb_controller->settings->get_setting( 'reply-to-name' );
+		if ( $this->target == 'user' ) {
+			$this->from_email = $rtb_controller->settings->get_setting( 'reply-to-address' );
+			$this->from_name = $rtb_controller->settings->get_setting( 'reply-to-name' );
+		} else {
+			$this->from_email = $this->booking->email;
+			$this->from_name = $this->booking->name;
+		}
 
 	}
 
@@ -115,16 +120,16 @@ class rtbNotificationEmail extends rtbNotification {
 
 		if( $this->event == 'new_submission' ) {
 			if ( $this->target == 'admin' ) {
-				$this->subject = $rtb_controller->settings->get_setting( 'subject-booking-admin' );
+				$this->subject = $this->process_subject_template( $rtb_controller->settings->get_setting( 'subject-booking-admin' ) );
 			} elseif ( $this->target == 'user' ) {
-				$this->subject = $rtb_controller->settings->get_setting( 'subject-booking-user' );
+				$this->subject = $this->process_subject_template( $rtb_controller->settings->get_setting( 'subject-booking-user' ) );
 			}
 
 		} elseif ( $this->event == 'pending_to_confirmed' ) {
-			$this->subject = $rtb_controller->settings->get_setting( 'subject-confirmed-user' );
+			$this->subject = $this->process_subject_template( $rtb_controller->settings->get_setting( 'subject-confirmed-user' ) );
 
 		} elseif ( $this->event == 'pending_to_closed' ) {
-			$this->subject = $rtb_controller->settings->get_setting( 'subject-rejected-user' );
+			$this->subject = $this->process_subject_template( $rtb_controller->settings->get_setting( 'subject-rejected-user' ) );
 		}
 
 	}
@@ -135,8 +140,10 @@ class rtbNotificationEmail extends rtbNotification {
 	 */
 	public function set_headers( $headers = null ) {
 
-		$headers = "From: " . stripslashes_deep( html_entity_decode( $this->from_name, ENT_COMPAT, 'UTF-8' ) ) . " <" . $this->from_email . ">\r\n";
-		$headers .= "Reply-To: ". $this->from_email . "\r\n";
+		global $rtb_controller;
+
+		$headers = "From: " . stripslashes_deep( html_entity_decode( $rtb_controller->settings->get_setting( 'reply-to-name' ), ENT_COMPAT, 'UTF-8' ) ) . " <" . apply_filters( 'rtb_notification_email_header_from_email', get_option( 'admin_email' ) ) . ">\r\n";
+		$headers .= "Reply-To: " . stripslashes_deep( html_entity_decode( $this->from_name, ENT_COMPAT, 'UTF-8' ) ) . " <" . $this->from_email . ">\r\n";
 		$headers .= "Content-Type: text/html; charset=utf-8\r\n";
 		$this->headers = apply_filters( 'rtb_notification_email_headers', $headers, $this );
 
@@ -173,6 +180,24 @@ class rtbNotificationEmail extends rtbNotification {
 		} else {
 			$this->message = wpautop( $this->process_template( $this->get_template( $template ) ) );
 		}
+
+	}
+
+	/**
+	 * Process template tags for email subjects
+	 * @since 0.0.1
+	 */
+	public function process_subject_template( $subject ) {
+
+		$template_tags = array(
+			'{user_name}'		=> $this->booking->name,
+			'{party}'			=> $this->booking->party,
+			'{date}'			=> $this->booking->format_date( $this->booking->date )
+		);
+
+		$template_tags = apply_filters( 'rtb_notification_email_subject_template_tags', $template_tags, $this );
+
+		return str_replace( array_keys( $template_tags ), array_values( $template_tags ), $subject );
 
 	}
 
