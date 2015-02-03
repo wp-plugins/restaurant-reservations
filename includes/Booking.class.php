@@ -60,7 +60,7 @@ class rtbBooking {
 		$this->ID = $post->ID;
 		$this->name = $post->post_title;
 		$this->date = $post->post_date;
-		$this->message = apply_filters( 'the_content', $post->post_content );
+		$this->message = $post->post_content;
 		$this->post_status = $post->post_status;
 
 		$this->load_post_metadata();
@@ -96,6 +96,22 @@ class rtbBooking {
 	}
 
 	/**
+	 * Prepare booking data loaded from the database for display in a booking
+	 * form as request fields. This is used, eg, for splitting datetime values
+	 * into date and time fields.
+	 * @since 1.3
+	 */
+	public function prepare_request_data() {
+
+		// Split $date to $request_date and $request_time
+		if ( empty( $this->request_date ) || empty( $this->request_time ) ) {
+			$date = new DateTime( $this->date );
+			$this->request_date = $date->format( 'Y/m/d' );
+			$this->request_time = $date->format( 'h:i A' );
+		}
+	}
+
+	/**
 	 * Format date
 	 * @since 0.0.1
 	 */
@@ -121,6 +137,12 @@ class rtbBooking {
 
 		$this->request_processed = true;
 
+		if ( empty( $this->ID ) ) {
+			$action = 'insert';
+		} else {
+			$action = 'update';
+		}
+
 		$this->validate_submission();
 		if ( $this->is_valid_submission() === false ) {
 			return false;
@@ -132,7 +154,7 @@ class rtbBooking {
 			$this->request_inserted = true;
 		}
 
-		do_action( 'rtb_insert_booking', $this );
+		do_action( 'rtb_' . $action . '_booking', $this );
 
 		return true;
 	}
@@ -153,7 +175,7 @@ class rtbBooking {
 			$this->validation_errors[] = array(
 				'field'		=> 'date',
 				'error_msg'	=> 'Booking request missing date',
-				'message'	=> __( 'Please enter the date you would like to book.', RTB_TEXTDOMAIN ),
+				'message'	=> __( 'Please enter the date you would like to book.', 'restaurant-reservations' ),
 			);
 
 		} else {
@@ -163,7 +185,7 @@ class rtbBooking {
 				$this->validation_errors[] = array(
 					'field'		=> 'date',
 					'error_msg'	=> $e->getMessage(),
-					'message'	=> __( 'The date you entered is not valid. Please select from one of the dates in the calendar.', RTB_TEXTDOMAIN ),
+					'message'	=> __( 'The date you entered is not valid. Please select from one of the dates in the calendar.', 'restaurant-reservations' ),
 				);
 			}
 		}
@@ -174,7 +196,7 @@ class rtbBooking {
 			$this->validation_errors[] = array(
 				'field'		=> 'time',
 				'error_msg'	=> 'Booking request missing time',
-				'message'	=> __( 'Please enter the time you would like to book.', RTB_TEXTDOMAIN ),
+				'message'	=> __( 'Please enter the time you would like to book.', 'restaurant-reservations' ),
 			);
 
 		} else {
@@ -184,7 +206,7 @@ class rtbBooking {
 				$this->validation_errors[] = array(
 					'field'		=> 'time',
 					'error_msg'	=> $e->getMessage(),
-					'message'	=> __( 'The time you entered is not valid. Please select from one of the times provided.', RTB_TEXTDOMAIN ),
+					'message'	=> __( 'The time you entered is not valid. Please select from one of the times provided.', 'restaurant-reservations' ),
 				);
 			}
 		}
@@ -201,7 +223,7 @@ class rtbBooking {
 					$this->validation_errors[] = array(
 						'field'		=> 'time',
 						'error_msg'	=> 'Booking request too far in the future',
-						'message'	=> sprintf( __( 'Sorry, bookings can not be made more than %s days in advance.', RTB_TEXTDOMAIN ), $early_bookings ),
+						'message'	=> sprintf( __( 'Sorry, bookings can not be made more than %s days in advance.', 'restaurant-reservations' ), $early_bookings ),
 					);
 				}
 			}
@@ -212,7 +234,7 @@ class rtbBooking {
 					$this->validation_errors[] = array(
 						'field'		=> 'time',
 						'error_msg'	=> 'Booking request in the past',
-						'message'	=> __( 'Sorry, bookings can not be made in the past.', RTB_TEXTDOMAIN ),
+						'message'	=> __( 'Sorry, bookings can not be made in the past.', 'restaurant-reservations' ),
 					);
 				}
 
@@ -220,11 +242,11 @@ class rtbBooking {
 				$late_bookings_seconds = $late_bookings * 60; // Late bookings allowance in seconds
 				if ( $request->format( 'U' ) < ( current_time( 'timestamp' ) + $late_bookings_seconds ) ) {
 					if ( $late_bookings >= 1440 ) {
-						$late_bookings_message = sprintf( __( 'Sorry, bookings must be made more than %s days in advance.', RTB_TEXTDOMAIN ), $late_bookings / 1440 );
+						$late_bookings_message = sprintf( __( 'Sorry, bookings must be made more than %s days in advance.', 'restaurant-reservations' ), $late_bookings / 1440 );
 					} elseif ( $late_bookings >= 60 ) {
-						$late_bookings_message = sprintf( __( 'Sorry, bookings must be made more than %s hours in advance.', RTB_TEXTDOMAIN ), $late_bookings / 60 );
+						$late_bookings_message = sprintf( __( 'Sorry, bookings must be made more than %s hours in advance.', 'restaurant-reservations' ), $late_bookings / 60 );
 					} else {
-						$late_bookings_message = sprintf( __( 'Sorry, bookings must be made more than %s mings in advance.', RTB_TEXTDOMAIN ), $late_bookings );
+						$late_bookings_message = sprintf( __( 'Sorry, bookings must be made more than %s mings in advance.', 'restaurant-reservations' ), $late_bookings );
 					}
 					$this->validation_errors[] = array(
 						'field'		=> 'time',
@@ -263,7 +285,7 @@ class rtbBooking {
 					$this->validation_errors[] = array(
 						'field'		=> 'date',
 						'error_msg'	=> 'Booking request made on invalid date or time in an exception rule',
-						'message'	=> __( 'Sorry, no bookings are being accepted then.', RTB_TEXTDOMAIN ),
+						'message'	=> __( 'Sorry, no bookings are being accepted then.', 'restaurant-reservations' ),
 					);
 				}
 			}
@@ -315,13 +337,13 @@ class rtbBooking {
 					$this->validation_errors[] = array(
 						'field'		=> 'date',
 						'error_msg'	=> 'Booking request made on an invalid date',
-						'message'	=> __( 'Sorry, no bookings are being accepted on that date.', RTB_TEXTDOMAIN ),
+						'message'	=> __( 'Sorry, no bookings are being accepted on that date.', 'restaurant-reservations' ),
 					);
 				} elseif ( !$time_is_valid ) {
 					$this->validation_errors[] = array(
 						'field'		=> 'time',
 						'error_msg'	=> 'Booking request made at an invalid time',
-						'message'	=> __( 'Sorry, no bookings are being accepted at that time.', RTB_TEXTDOMAIN ),
+						'message'	=> __( 'Sorry, no bookings are being accepted at that time.', 'restaurant-reservations' ),
 					);
 				}
 			}
@@ -343,31 +365,27 @@ class rtbBooking {
 			$this->validation_errors[] = array(
 				'field'			=> 'name',
 				'post_variable'	=> $this->name,
-				'message'	=> __( 'Please enter a name for this booking.', RTB_TEXTDOMAIN ),
+				'message'	=> __( 'Please enter a name for this booking.', 'restaurant-reservations' ),
 			);
 		}
 
 		// Party
-		$this->party = empty( $_POST['rtb-party'] ) ? '' : sanitize_text_field( stripslashes_deep( $_POST['rtb-party'] ) );
+		$this->party = empty( $_POST['rtb-party'] ) ? '' : absint( $_POST['rtb-party'] );
 		if ( empty( $this->party ) ) {
 			$this->validation_errors[] = array(
 				'field'			=> 'party',
 				'post_variable'	=> $this->party,
-				'message'	=> __( 'Please let us know how many people will be in your party.', RTB_TEXTDOMAIN ),
+				'message'	=> __( 'Please let us know how many people will be in your party.', 'restaurant-reservations' ),
 			);
 
 		// Check party size
-		// If the user has entered a party size like "five" or "3-4" or
-		// something like that, let's go ahead and allow it. Restaurant manager
-		// can choose to accept or deny it. We'll only evaluate the max party
-		// size criteria on pure digits ("2" or "10").
-		} elseif ( ctype_digit( $this->party ) ) {
+		} else {
 			$party_size = $rtb_controller->settings->get_setting( 'party-size' );
-			if ( !empty( $party_size ) && $party_size < (int) $this->party ) {
+			if ( !empty( $party_size ) && $party_size < $this->party ) {
 				$this->validation_errors[] = array(
 					'field'			=> 'party',
 					'post_variable'	=> $this->party,
-					'message'	=> sprintf( __( 'We only accept bookings for parties of up to %d people.', RTB_TEXTDOMAIN ), $party_size ),
+					'message'	=> sprintf( __( 'We only accept bookings for parties of up to %d people.', 'restaurant-reservations' ), $party_size ),
 				);
 			}
 		}
@@ -378,13 +396,32 @@ class rtbBooking {
 			$this->validation_errors[] = array(
 				'field'			=> 'email',
 				'post_variable'	=> $this->email,
-				'message'	=> __( 'Please enter an email address so we can confirm your booking.', RTB_TEXTDOMAIN ),
+				'message'	=> __( 'Please enter an email address so we can confirm your booking.', 'restaurant-reservations' ),
 			);
 		}
 
 		// Phone/Message
 		$this->phone = empty( $_POST['rtb-phone'] ) ? '' : sanitize_text_field( stripslashes_deep( $_POST['rtb-phone'] ) );
-		$this->message = empty( $_POST['rtb-message'] ) ? '' : sanitize_text_field( stripslashes_deep( $_POST['rtb-message'] ) );
+		$this->message = empty( $_POST['rtb-message'] ) ? '' : nl2br( wp_kses_post( stripslashes_deep( $_POST['rtb-message'] ) ) );
+
+		// Post Status (define a default post status is none passed)
+		if ( !empty( $_POST['rtb-post-status'] ) && array_key_exists( $_POST['rtb-post-status'], $rtb_controller->cpts->booking_statuses ) ) {
+			$this->status = sanitize_text_field( stripslashes_deep( $_POST['rtb-post-status'] ) );
+		} else {
+			$this->status = 'pending';
+		}
+
+		// Check if any required fields are empty
+		$required_fields = $rtb_controller->settings->get_required_fields();
+		foreach( $required_fields as $slug => $field ) {
+			if ( !$this->field_has_error( $slug ) && empty( $_POST[ 'rtb-' . $slug ] ) ) {
+				$this->validation_errors[] = array(
+					'field'			=> $slug,
+					'post_variable'	=> '',
+					'message'	=> __( 'Please complete this field to request a booking.', 'restaurant-reservations' ),
+				);
+			}
+		}
 
 		do_action( 'rtb_validate_booking_submission', $this );
 
@@ -392,12 +429,32 @@ class rtbBooking {
 
 	/**
 	 * Check if submission is valid
+	 *
 	 * @since 0.0.1
 	 */
 	public function is_valid_submission() {
+
 		if ( !count( $this->validation_errors ) ) {
 			return true;
 		}
+
+		return false;
+	}
+
+	/**
+	 * Check if a field already has an error attached to it
+	 *
+	 * @field string Field slug
+	 * @since 1.3
+	 */
+	public function field_has_error( $field_slug ) {
+
+		foreach( $this->validation_errors as $error ) {
+			if ( $error['field'] == $field_slug ) {
+				return true;
+			}
+		}
+
 		return false;
 	}
 
@@ -412,8 +469,12 @@ class rtbBooking {
 			'post_title'	=> $this->name,
 			'post_content'	=> $this->message,
 			'post_date'		=> $this->date,
-			'post_status'	=> 'pending',
+			'post_status'	=> $this->status,
 		);
+
+		if ( !empty( $this->ID ) ) {
+			$args['ID'] = $this->ID;
+		}
 
 		$args = apply_filters( 'rtb_insert_booking_data', $args, $this );
 
