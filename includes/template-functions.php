@@ -43,22 +43,12 @@ function rtb_print_booking_form() {
 	// Process a booking request
 	if ( !empty( $_POST['action'] ) && $_POST['action'] == 'booking_request' ) {
 
-		if ( empty( $rtb_controller->request ) ) {
+		if ( get_class( $rtb_controller->request ) === 'stdClass' ) {
 			require_once( RTB_PLUGIN_DIR . '/includes/Booking.class.php' );
 			$rtb_controller->request = new rtbBooking();
 		}
 
 		$rtb_controller->request->insert_booking();
-	}
-
-	// Set up a dummy request object if no request has been made. This just
-	// simplifies the display of values in the form below
-	if ( empty( $rtb_controller->request ) ) {
-		$request = new stdClass();
-		$request->request_processed = false;
-		$request->request_inserted = false;
-	} else {
-		$request = $rtb_controller->request;
 	}
 
 	// Define the form's action parameter
@@ -67,78 +57,15 @@ function rtb_print_booking_form() {
 		$booking_page = get_permalink( $booking_page );
 	}
 
-	// Define the form fields
-	//
-	// This array defines the field details and a callback function to
-	// render each field. To customize the form output, modify the
-	// callback functions to point to your custom function. Don't forget
-	// to output an error message in your custom callback function. You
-	// can use rtb_print_form_error( $slug ) to do this.
-	$fields = array(
-
-		// Reservation details fieldset
-		'reservation'	=> array(
-			'legend'	=> __( 'Book a table', RTB_TEXTDOMAIN ),
-			'fields'	=> array(
-				'date'		=> array(
-					'title'			=> __( 'Date', RTB_TEXTDOMAIN ),
-					'request_input'	=> empty( $request->request_date ) ? '' : $request->request_date,
-					'callback'		=> 'rtb_print_form_text_field',
-				),
-				'time'		=> array(
-					'title'			=> __( 'Time', RTB_TEXTDOMAIN ),
-					'request_input'	=> empty( $request->request_time ) ? '' : $request->request_time,
-					'callback'		=> 'rtb_print_form_text_field',
-				),
-				'party'		=> array(
-					'title'			=> __( 'Party', RTB_TEXTDOMAIN ),
-					'request_input'	=> empty( $request->party ) ? '' : $request->party,
-					'callback'		=> 'rtb_print_form_text_field',
-				),
-			),
-		),
-
-		// Contact details fieldset
-		'contact'	=> array(
-			'legend'	=> __( 'Contact Details', RTB_TEXTDOMAIN ),
-			'fields'	=> array(
-				'name'		=> array(
-					'title'			=> __( 'Name', RTB_TEXTDOMAIN ),
-					'request_input'	=> empty( $request->name ) ? '' : $request->name,
-					'callback'		=> 'rtb_print_form_text_field',
-				),
-				'email'		=> array(
-					'title'			=> __( 'Email', RTB_TEXTDOMAIN ),
-					'request_input'	=> empty( $request->email ) ? '' : $request->email,
-					'callback'		=> 'rtb_print_form_text_field',
-				),
-				'phone'		=> array(
-					'title'			=> __( 'Phone', RTB_TEXTDOMAIN ),
-					'request_input'	=> empty( $request->phone ) ? '' : $request->phone,
-					'callback'		=> 'rtb_print_form_text_field',
-				),
-				'add-message'	=> array(
-					'title'		=> __( 'Add a Message', RTB_TEXTDOMAIN ),
-					'request_input'	=> '',
-					'callback'	=> 'rtb_print_form_message_link',
-				),
-				'message'		=> array(
-					'title'			=> __( 'Message', RTB_TEXTDOMAIN ),
-					'request_input'	=> empty( $request->message ) ? '' : $request->message,
-					'callback'		=> 'rtb_print_form_textarea_field',
-				),
-			),
-		),
-	);
-
-	$fields = apply_filters( 'rtb_booking_form_fields', $fields, $request );
+	// Retrieve the form fields
+	$fields = $rtb_controller->settings->get_booking_form_fields( $rtb_controller->request );
 
 	ob_start();
 
 	?>
 
 <div class="rtb-booking-form">
-	<?php if ( $request->request_inserted === true ) : ?>
+	<?php if ( $rtb_controller->request->request_inserted === true ) : ?>
 	<div class="rtb-message">
 		<p><?php echo $rtb_controller->settings->get_setting( 'success-message' ); ?></p>
 	</div>
@@ -148,27 +75,41 @@ function rtb_print_booking_form() {
 
 		<?php do_action( 'rtb_booking_form_before_fields' ); ?>
 
-		<?php foreach( $fields as $fieldset => $contents ) : ?>
-		<fieldset class="<?php echo $fieldset; ?>">
+		<?php foreach( $fields as $fieldset => $contents ) :
+			$fieldset_classes = isset( $contents['callback_args']['classes'] ) ? $contents['callback_args']['classes'] : array();
+			$legend_classes = isset( $contents['callback_args']['legend_classes'] ) ? $contents['callback_args']['legend_classes'] : array();
+		?>
+		<fieldset <?php echo rtb_print_element_class( $fieldset, $fieldset_classes ); ?>>
 
 			<?php if ( !empty( $contents['legend'] ) ) : ?>
-			<legend>
+			<legend <?php echo rtb_print_element_class( '', $legend_classes ); ?>>
 				<?php echo $contents['legend']; ?>
 			</legend>
 			<?php endif; ?>
 
 			<?php
 				foreach( $contents['fields'] as $slug => $field ) {
-					call_user_func( $field['callback'], $slug, $field['title'], $field['request_input'] );
+
+					$args = empty( $field['callback_args'] ) ? null : $field['callback_args'];
+
+					call_user_func( $field['callback'], $slug, $field['title'], $field['request_input'], $args );
 				}
 			?>
 		</fieldset>
 		<?php endforeach; ?>
 
 		<?php do_action( 'rtb_booking_form_after_fields' ); ?>
-		
-		<button type="submit"><?php _e( 'Request Booking', RTB_TEXTDOMAIN ); ?></button>
-		
+
+		<?php
+			$button = sprintf(
+				'<button type="submit">%s</button>',
+				apply_filters( 'rtb_booking_form_submit_label', __( 'Request Booking', 'restaurant-reservations' ) )
+			);
+
+			echo apply_filters( 'rtb_booking_form_submit_button', $button );
+		?>
+
+
 	</form>
 	<?php endif; ?>
 </div>
@@ -189,6 +130,8 @@ function rtb_print_booking_form() {
  */
 if ( !function_exists( 'rtb_enqueue_assets' ) ) {
 function rtb_enqueue_assets() {
+
+	global $wp_scripts;
 
 	wp_enqueue_style( 'rtb-booking-form' );
 
@@ -285,7 +228,7 @@ function rtb_get_datepicker_rules() {
 		}
 	}
 
-	return $disable_rules;
+	return apply_filters( 'rtb_datepicker_disable_rules', $disable_rules, $schedule_open, $schedule_closed );
 
 }
 } // endif;
@@ -295,19 +238,21 @@ function rtb_get_datepicker_rules() {
  * @since 1.3
  */
 if ( !function_exists( 'rtb_print_form_text_field' ) ) {
-function rtb_print_form_text_field( $slug, $title, $value ) {
+function rtb_print_form_text_field( $slug, $title, $value, $args = array() ) {
 
 	$slug = esc_attr( $slug );
 	$value = esc_attr( $value );
+	$type = empty( $args['input_type'] ) ? 'text' : esc_attr( $args['input_type'] );
+	$classes = isset( $args['classes'] ) ? $args['classes'] : array();
 
 	?>
-	
-	<div class="<?php echo $slug; ?>">
+
+	<div <?php echo rtb_print_element_class( $slug, $classes ); ?>>
 		<?php echo rtb_print_form_error( $slug ); ?>
 		<label for="rtb-<?php echo $slug; ?>">
-			<?php _e( $title, RTB_TEXTDOMAIN ); ?>
+			<?php echo $title; ?>
 		</label>
-		<input type="text" name="rtb-<?php echo $slug; ?>" id="rtb-<?php echo $slug; ?>" value="<?php echo $value; ?>">
+		<input type="<?php echo $type; ?>" name="rtb-<?php echo $slug; ?>" id="rtb-<?php echo $slug; ?>" value="<?php echo $value; ?>">
 	</div>
 
 	<?php
@@ -320,20 +265,146 @@ function rtb_print_form_text_field( $slug, $title, $value ) {
  * @since 1.3
  */
 if ( !function_exists( 'rtb_print_form_textarea_field' ) ) {
-function rtb_print_form_textarea_field( $slug, $title, $value ) {
+function rtb_print_form_textarea_field( $slug, $title, $value, $args = array() ) {
 
 	$slug = esc_attr( $slug );
+	// Strip out <br> tags when placing in a textarea
+	$value = preg_replace('/\<br(\s*)?\/?\>/i', '', $value);
+	$classes = isset( $args['classes'] ) ? $args['classes'] : array();
 
 	?>
-	
-	<div class="<?php echo $slug; ?>">
+
+	<div <?php echo rtb_print_element_class( $slug, $classes ); ?>>
 		<?php echo rtb_print_form_error( $slug ); ?>
 		<label for="rtb-<?php echo $slug; ?>">
-			<?php _e( $title, RTB_TEXTDOMAIN ); ?>
+			<?php echo $title; ?>
 		</label>
 		<textarea name="rtb-<?php echo $slug; ?>" id="rtb-<?php echo $slug; ?>"><?php echo $value; ?></textarea>
 	</div>
-			
+
+	<?php
+
+}
+} // endif;
+
+/**
+ * Print a select form field
+ * @since 1.3
+ */
+if ( !function_exists( 'rtb_print_form_select_field' ) ) {
+function rtb_print_form_select_field( $slug, $title, $value, $args ) {
+
+	$slug = esc_attr( $slug );
+	$value = esc_attr( $value );
+	$options = is_array( $args['options'] ) ? $args['options'] : array();
+	$classes = isset( $args['classes'] ) ? $args['classes'] : array();
+
+	?>
+
+	<div <?php echo rtb_print_element_class( $slug, $classes ); ?>>
+		<?php echo rtb_print_form_error( $slug ); ?>
+		<label for="rtb-<?php echo $slug; ?>">
+			<?php echo $title; ?>
+		</label>
+		<select name="rtb-<?php echo $slug; ?>" id="rtb-<?php echo $slug; ?>">
+			<?php foreach ( $options as $opt_value => $opt_label ) : ?>
+			<option value="<?php echo esc_attr( $opt_value ); ?>" <?php selected( $opt_value, $value ); ?>><?php echo esc_attr( $opt_label ); ?></option>
+			<?php endforeach; ?>
+		</select>
+	</div>
+
+	<?php
+
+}
+} // endif;
+
+/**
+ * Print a checkbox form field
+ *
+ * @uses rtb_print_form_tick_field
+ * @since 1.3.1
+ */
+if ( !function_exists( 'rtb_print_form_checkbox_field' ) ) {
+function rtb_print_form_checkbox_field( $slug, $title, $value, $args ) {
+
+	$slug = esc_attr( $slug );
+	$value = !empty( $value ) ? array_map( 'esc_attr', $value ) : array();
+	$options = is_array( $args['options'] ) ? $args['options'] : array();
+	$classes = isset( $args['classes'] ) ? $args['classes'] : array();
+
+	?>
+
+	<div <?php echo rtb_print_element_class( $slug, $classes ); ?>>
+		<?php echo rtb_print_form_error( $slug ); ?>
+		<label>
+			<?php echo $title; ?>
+		</label>
+		<?php foreach ( $options as $opt_value => $opt_label ) : ?>
+		<label>
+			<input type="checkbox" name="rtb-<?php echo $slug; ?>[]" id="rtb-<?php echo $slug; ?>" value="<?php echo esc_attr( $opt_value ); ?>"<?php echo !empty( $value ) && in_array( $opt_value, $value ) ? ' checked' : ''; ?>>
+			<?php echo $opt_label; ?>
+		</label>
+		<?php endforeach; ?>
+	</div>
+
+	<?php
+}
+} // endif;
+
+/**
+ * Print a radio button form field
+ *
+ * @uses rtb_print_form_tick_field
+ * @since 1.3.1
+ */
+if ( !function_exists( 'rtb_print_form_radio_field' ) ) {
+function rtb_print_form_radio_field( $slug, $title, $value, $args ) {
+
+	$slug = esc_attr( $slug );
+	$value = esc_attr( $value );
+	$options = is_array( $args['options'] ) ? $args['options'] : array();
+	$classes = isset( $args['classes'] ) ? $args['classes'] : array();
+
+	?>
+
+	<div <?php echo rtb_print_element_class( $slug, $classes ); ?>>
+		<?php echo rtb_print_form_error( $slug ); ?>
+		<label>
+			<?php echo $title; ?>
+		</label>
+		<?php foreach ( $options as $opt_value => $opt_label ) : ?>
+		<label>
+			<input type="radio" name="rtb-<?php echo $slug; ?>" id="rtb-<?php echo $slug; ?>" value="<?php echo esc_attr( $opt_value ); ?>" <?php checked( $opt_value, $value ); ?>>
+			<?php echo $opt_label; ?>
+		</label>
+		<?php endforeach; ?>
+	</div>
+
+	<?php
+}
+} // endif;
+
+/**
+ * Print a confirm prompt form field
+ *
+ * @since 1.3.1
+ */
+if ( !function_exists( 'rtb_print_form_confirm_field' ) ) {
+function rtb_print_form_confirm_field( $slug, $title, $value, $args ) {
+
+	$slug = esc_attr( $slug );
+	$value = esc_attr( $value );
+	$classes = isset( $args['classes'] ) ? $args['classes'] : array();
+
+	?>
+
+	<div <?php echo rtb_print_element_class( $slug, $classes ); ?>>
+		<label for="rtb-<?php echo $slug; ?>">
+			<input type="checkbox" name="rtb-<?php echo $slug; ?>" id="rtb-<?php echo $slug; ?>" value="1" <?php checked( $value, 1 ); ?>>
+			<?php echo $title; ?>
+		</label>
+	</div>
+
 	<?php
 
 }
@@ -344,19 +415,20 @@ function rtb_print_form_textarea_field( $slug, $title, $value ) {
  * @since 1.3
  */
 if ( !function_exists( 'rtb_print_form_message_link' ) ) {
-function rtb_print_form_message_link( $slug, $title, $value ) {
+function rtb_print_form_message_link( $slug, $title, $value, $args = array() ) {
 
 	$slug = esc_attr( $slug );
 	$value = esc_attr( $value );
+	$classes = isset( $args['classes'] ) ? $args['classes'] : array();
 
 	?>
-	
-	<div class="<?php echo $slug; ?>">
+
+	<div <?php echo rtb_print_element_class( $slug, $classes ); ?>>
 		<a href="#">
-			<?php _e( $title, RTB_TEXTDOMAIN ); ?>
+			<?php echo $title; ?>
 		</a>
 	</div>
-			
+
 	<?php
 
 }
@@ -378,5 +450,24 @@ function rtb_print_form_error( $field ) {
 			}
 		}
 	}
+}
+} // endif;
+
+/**
+ * Print a class attribute based on the slug and optional classes, provided with arguments
+ * @since 1.3
+ */
+if ( !function_exists( 'rtb_print_element_class' ) ) {
+function rtb_print_element_class( $slug, $additional_classes = array() ) {
+	$classes = empty( $additional_classes ) ? array() : $additional_classes;
+
+	if ( ! empty( $slug ) ) {
+		array_push( $classes, $slug );
+	}
+
+	$class_attr = esc_attr( join( ' ', $classes ) );
+
+	return empty( $class_attr ) ? '' : sprintf( 'class="%s"', $class_attr );
+
 }
 } // endif;
