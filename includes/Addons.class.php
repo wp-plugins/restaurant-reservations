@@ -78,20 +78,29 @@ class rtbAddons {
 	 */
 	public function enqueue_admin_assets() {
 
+		// Use the page reference in $admin_page_hooks because
+		// it changes in SOME hooks when it is translated.
+		// https://core.trac.wordpress.org/ticket/18857
+		global $admin_page_hooks;
+
 		$screen = get_current_screen();
-		if ( $screen->base == 'bookings_page_rtb-addons' ) {
+		if ( empty( $screen ) || empty( $admin_page_hooks['rtb-bookings'] ) ) {
+			return;
+		}
+
+		if ( $screen->base == $admin_page_hooks['rtb-bookings'] . '_page_rtb-addons' ) {
 			wp_localize_script(
 				'rtb-admin',
 				'rtb_addons',
 				array(
 					'nonce'			=> wp_create_nonce( 'rtb-addons' ),
 					'strings'		=> array(
-						'loading'		=> __( 'Loading', RTB_TEXTDOMAIN ),
-						'error_unknown'	=> _x( 'An unknown error occured.', 'Error message when retrieving list of addons', RTB_TEXTDOMAIN ),
-						'installed'		=> _x( 'Already Installed', 'Label for an addon that is already installed and activated.', RTB_TEXTDOMAIN ),
-						'coming_soon'	=> _x( 'Coming Soon', 'Label for an addon that is not yet released.', RTB_TEXTDOMAIN ),
-						'free'			=> _x( 'Free', 'Label for an addon that is free.', RTB_TEXTDOMAIN ),
-						'learn_more'	=> _x( 'Get It', 'Label for an addon that is released.', RTB_TEXTDOMAIN ),
+						'loading'		=> __( 'Loading', 'restaurant-reservations' ),
+						'error_unknown'	=> _x( 'An unknown error occured.', 'Error message when retrieving list of addons', 'restaurant-reservations' ),
+						'installed'		=> _x( 'Already Installed', 'Label for an addon that is already installed and activated.', 'restaurant-reservations' ),
+						'coming_soon'	=> _x( 'Coming Soon', 'Label for an addon that is not yet released.', 'restaurant-reservations' ),
+						'free'			=> _x( 'Free', 'Label for an addon that is free.', 'restaurant-reservations' ),
+						'learn_more'	=> _x( 'Get It', 'Label for an addon that is released.', 'restaurant-reservations' ),
 					)
 				)
 			);
@@ -105,8 +114,8 @@ class rtbAddons {
 
 		add_submenu_page(
 			'rtb-bookings',
-			_x( 'Addons', 'Title of addons page', RTB_TEXTDOMAIN ),
-			_x( 'Addons', 'Title of addons page in the admin menu', RTB_TEXTDOMAIN ),
+			_x( 'Addons', 'Title of addons page', 'restaurant-reservations' ),
+			_x( 'Addons', 'Title of addons page in the admin menu', 'restaurant-reservations' ),
 			'manage_options',
 			'rtb-addons',
 			array( $this, 'show_admin_addons_page' )
@@ -123,7 +132,7 @@ class rtbAddons {
 		?>
 
 		<div class="wrap">
-			<h2><?php _e( 'Addons for Restaurant Reservations', RTB_TEXTDOMAIN ); ?></h2>
+			<h2><?php _e( 'Addons for Restaurant Reservations', 'restaurant-reservations' ); ?></h2>
 			<?php do_action( 'rtb_addons_pre' ); ?>
 			<div id="rtb-addons">
 				<div class="rtb-loading">
@@ -145,7 +154,7 @@ class rtbAddons {
 		wp_send_json_error(
 			array(
 				'error' => 'loggedout',
-				'msg' => __( 'You have been logged out. Please login again to retrieve the addons.', RTB_TEXTDOMAIN ),
+				'msg' => __( 'You have been logged out. Please login again to retrieve the addons.', 'restaurant-reservations' ),
 			)
 		);
 	}
@@ -161,7 +170,7 @@ class rtbAddons {
 			wp_send_json_error(
 				array(
 					'error' => 'nopriv',
-					'msg' => __( 'You do not have permission to access this page. Please login to an administrator account if you have one.', RTB_TEXTDOMAIN ),
+					'msg' => __( 'You do not have permission to access this page. Please login to an administrator account if you have one.', 'restaurant-reservations' ),
 				)
 			);
 		}
@@ -170,14 +179,16 @@ class rtbAddons {
 			$ch = curl_init();
 			curl_setopt( $ch, CURLOPT_URL, $url );
 			curl_setopt( $ch, CURLOPT_HTTPHEADER, array( 'Content-Type: application/json' ) );
-			curl_setopt( $ch, CURLOPT_USERAGENT, 'PHP-MCAPI/2.0' );       
+			curl_setopt( $ch, CURLOPT_USERAGENT, 'PHP-MCAPI/2.0' );
 			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 			curl_setopt( $ch, CURLOPT_TIMEOUT, 10 );
 			$result = curl_exec($ch);
 			curl_close($ch);
-			
-		} else {
+
+		} elseif ( ini_get( 'allow_url_fopen' ) ) {
 			$result = @file_get_contents( $url );
+		} else {
+			$result = @file_get_contents( RTB_PLUGIN_DIR . '/assets/addons-backup.json' );
 		}
 
 		if ( $result ) {
@@ -187,7 +198,7 @@ class rtbAddons {
 			wp_send_json_error(
 				array(
 					'error' => 'apifailed',
-					'msg' => __( 'The addons list could not be retrieved. Please <a href="">try again</a>. If the problem persists over time, please report it on the <a href="http://wordpress.org/support/plugin/restaurant-reservations" target="_blank">support forums</a>.', RTB_TEXTDOMAIN ),
+					'msg' => __( 'The addons list could not be retrieved. Please <a href="">try again</a>. If the problem persists over time, please report it on the <a href="http://wordpress.org/support/plugin/restaurant-reservations" target="_blank">support forums</a>.', 'restaurant-reservations' ),
 				)
 			);
 		}
