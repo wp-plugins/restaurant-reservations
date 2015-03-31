@@ -254,16 +254,32 @@ class rtbBookingsTable extends WP_List_Table {
 	}
 
 	/**
+	 * Extra controls to be displayed between bulk actions and pagination
+	 *
+	 * @param string pos Position of this tablenav: `top` or `btm`
+	 * @since 1.4.1
+	 */
+	public function extra_tablenav( $pos ) {
+		do_action( 'rtb_bookings_table_actions', $pos );
+	}
+
+	/**
 	 * Generates content for a single row of the table
 	 * @since 0.0.1
 	 */
 	public function single_row( $item ) {
-		static $row_class = '';
-		$row_class = ( $row_class == '' ? 'alternate' : '' );
+		static $row_alternate_class = '';
+		$row_alternate_class = ( $row_alternate_class == '' ? 'alternate' : '' );
 
-		echo '<tr class="' . esc_attr( $item->post_status );
-		echo $row_class == '' ? '' : ' ' . $row_class;
-		echo '">';
+		$row_classes = array( esc_attr( $item->post_status ) );
+
+		if ( !empty( $row_alternate_class ) ) {
+			$row_classes[] = $row_alternate_class;
+		}
+
+		$row_classes = apply_filters( 'rtb_admin_bookings_list_row_classes', $row_classes, $item );
+
+		echo '<tr class="' . implode( ' ', $row_classes ) . '">';
 		$this->single_row_columns( $item );
 		echo '</tr>';
 	}
@@ -584,72 +600,23 @@ class rtbBookingsTable extends WP_List_Table {
 	public function bookings_data() {
 
 		$args = array(
-			'post_type'			=> RTB_BOOKING_POST_TYPE,
 			'posts_per_page'	=> $this->per_page,
-			'paged'				=> isset( $_GET['paged'] ) ? $_GET['paged'] : 1,
-			'post_status'		=> isset( $_GET['status'] ) ? $_GET['status'] : array( 'confirmed', 'pending', 'closed' ),
 		);
 
-		if ( isset( $_GET['orderby'] ) ) {
-			$args['orderby'] = $_GET['orderby'];
+		if ( !empty( $this->filter_start_date ) ) {
+			$args['start_date'] = $this->filter_start_date;
 		}
 
-		$args['order'] = !empty( $_GET['order'] ) ? $_GET['order'] : 'ASC';
-
-		if ( $this->filter_start_date !== null || $this->filter_end_date !== null ) {
-
-			$date_query = array();
-
-			if ( $this->filter_start_date !== null ) {
-				$date_query['after'] = $this->filter_start_date;
-			}
-
-			if ( $this->filter_end_date !== null ) {
-				$date_query['before'] = $this->filter_end_date;
-			}
-
-			if ( count( $date_query ) ) {
-				$args['date_query'] = $date_query;
-			}
-
-		} elseif ( !empty( $_GET['schedule'] ) ) {
-
-			if ( $_GET['schedule'] == 'today' ) {
-				$today = getdate();
-				$args['year'] = $today['year'];
-				$args['monthnum'] = $today['mon'];
-				$args['day'] = $today['mday'];
-			}
-
-		// Default date setting is to show upcoming bookings
-		} elseif ( empty( $_GET['schedule'] ) ) {
-			$args['date_query'] = array(
-				array(
-					'after' => '-1 hour', // show bookings that have just passed
-				)
-			);
-			if ( empty( $_GET['order'] ) ) {
-				$args['order'] = 'ASC';
-			}
-
+		if ( !empty( $this->filter_end_date ) ) {
+			$args['end_date'] = $this->filter_end_date;
 		}
 
-		$args = apply_filters( 'rtb_bookings_table_query_args', $args );
+		$query = new rtbQuery( $args, 'bookings-table' );
+		$query->parse_request_args();
+		$query->prepare_args();
+		$query->args = apply_filters( 'rtb_bookings_table_query_args', $query->args );
 
-		// Make query
-		$query = new WP_Query( $args );
-
-		if ( $query->have_posts() ) {
-			while ( $query->have_posts() ) {
-				$query->the_post();
-
-				require_once( RTB_PLUGIN_DIR . '/includes/Booking.class.php' );
-				$booking = new rtbBooking();
-				if ( $booking->load_post( $query->post ) ) {
-					$this->bookings[] = $booking;
-				}
-			}
-		}
+		$this->bookings = $query->get_bookings();
 	}
 
 	/**

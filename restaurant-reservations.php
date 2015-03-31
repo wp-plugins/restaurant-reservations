@@ -3,7 +3,7 @@
  * Plugin Name: Restaurant Reservations
  * Plugin URI: http://themeofthecrop.com
  * Description: Accept restaurant reservations and bookings online.
- * Version: 1.4
+ * Version: 1.4.1
  * Author: Theme of the Crop
  * Author URI: http://themeofthecrop.com
  * License:     GNU General Public License v2.0 or later
@@ -62,6 +62,9 @@ class rtbInit {
 		$this->request->request_processed = false;
 		$this->request->request_inserted = false;
 
+		// Load query class
+		require_once( RTB_PLUGIN_DIR . '/includes/Query.class.php' );
+
 		// Add custom roles and capabilities
 		add_action( 'init', array( $this, 'add_roles' ) );
 
@@ -99,6 +102,12 @@ class rtbInit {
 
 		// Add links to plugin listing
 		add_filter('plugin_action_links', array( $this, 'plugin_action_links' ), 10, 2);
+
+		// Load the license handling
+		if ( file_exists( RTB_PLUGIN_DIR . '/includes/Licenses.class.php' ) ) {
+			require_once( RTB_PLUGIN_DIR . '/includes/Licenses.class.php' );
+			$this->licenses = new rtbLicenses();
+		}
 
 		// Add the addons page
 		require_once( RTB_PLUGIN_DIR . '/includes/Addons.class.php' );
