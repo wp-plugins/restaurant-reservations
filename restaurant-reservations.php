@@ -3,15 +3,13 @@
  * Plugin Name: Restaurant Reservations
  * Plugin URI: http://themeofthecrop.com
  * Description: Accept restaurant reservations and bookings online.
- * Version: 1.2.2
+ * Version: 1.4.4
  * Author: Theme of the Crop
  * Author URI: http://themeofthecrop.com
  * License:     GNU General Public License v2.0 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
- * Requires at least: 3.8
- * Tested up to: 3.9.1
  *
- * Text Domain: rtbdomain
+ * Text Domain: restaurant-reservations
  * Domain Path: /languages/
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
@@ -38,12 +36,17 @@ class rtbInit {
 	public $form_rendered = false;
 
 	/**
+	 * An object which stores a booking request, or an empty object if
+	 * no request has been processed.
+	 */
+	public $request;
+
+	/**
 	 * Initialize the plugin and register hooks
 	 */
 	public function __construct() {
 
 		// Common strings
-		define( 'RTB_TEXTDOMAIN', 'rtbdomain' );
 		define( 'RTB_PLUGIN_DIR', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
 		define( 'RTB_PLUGIN_URL', untrailingslashit( plugins_url( basename( plugin_dir_path( __FILE__ ) ), basename( __FILE__ ) ) ) );
 		define( 'RTB_PLUGIN_FNAME', plugin_basename( __FILE__ ) );
@@ -51,9 +54,16 @@ class rtbInit {
 		define( 'RTB_BOOKING_POST_TYPE_SLUG', 'booking' );
 		define( 'RTB_LOAD_FRONTEND_ASSETS', apply_filters( 'rtb-load-frontend-assets', true ) );
 
-
 		// Initialize the plugin
 		add_action( 'init', array( $this, 'load_textdomain' ) );
+
+		// Set up empty request object
+		$this->request = new stdClass();
+		$this->request->request_processed = false;
+		$this->request->request_inserted = false;
+
+		// Load query class
+		require_once( RTB_PLUGIN_DIR . '/includes/Query.class.php' );
 
 		// Add custom roles and capabilities
 		add_action( 'init', array( $this, 'add_roles' ) );
@@ -62,14 +72,15 @@ class rtbInit {
 		require_once( RTB_PLUGIN_DIR . '/includes/CustomPostTypes.class.php' );
 		$this->cpts = new rtbCustomPostTypes();
 
-		// Add the admin menu
-		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
-
 		// Flush the rewrite rules for the custom post types
 		register_activation_hook( __FILE__, array( $this, 'rewrite_flush' ) );
 
 		// Load the template functions which print the booking form, etc
 		require_once( RTB_PLUGIN_DIR . '/includes/template-functions.php' );
+
+		// Load the admin bookings page
+		require_once( RTB_PLUGIN_DIR . '/includes/AdminBookings.class.php' );
+		new rtbAdminBookings();
 
 		// Load assets
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
@@ -92,6 +103,12 @@ class rtbInit {
 		// Add links to plugin listing
 		add_filter('plugin_action_links', array( $this, 'plugin_action_links' ), 10, 2);
 
+		// Load the license handling
+		if ( file_exists( RTB_PLUGIN_DIR . '/includes/Licenses.class.php' ) ) {
+			require_once( RTB_PLUGIN_DIR . '/includes/Licenses.class.php' );
+			$this->licenses = new rtbLicenses();
+		}
+
 		// Add the addons page
 		require_once( RTB_PLUGIN_DIR . '/includes/Addons.class.php' );
 		new rtbAddons(
@@ -100,6 +117,10 @@ class rtbInit {
 				'plugin'	=> basename( plugin_dir_path( __FILE__ ) ),
 			)
 		);
+
+		// Load backwards compatibility functions
+		require_once( RTB_PLUGIN_DIR . '/includes/Compatibility.class.php' );
+		new rtbCompatibility();
 
 	}
 
@@ -118,7 +139,7 @@ class rtbInit {
 	 * @since 0.0.1
 	 */
 	public function load_textdomain() {
-		load_plugin_textdomain( RTB_TEXTDOMAIN, false, plugin_basename( dirname( __FILE__ ) ) . "/languages/" );
+		load_plugin_textdomain( 'restaurant-reservations', false, plugin_basename( dirname( __FILE__ ) ) . "/languages/" );
 	}
 
 	/**
@@ -133,7 +154,7 @@ class rtbInit {
 		// in the account.
 		$booking_manager = add_role(
 			'rtb_booking_manager',
-			__( 'Booking Manager', RTB_TEXTDOMAIN ),
+			__( 'Booking Manager', 'restaurant-reservations' ),
 			array(
 				'read'				=> true,
 				'manage_bookings'	=> true,
@@ -155,58 +176,12 @@ class rtbInit {
 	}
 
 	/**
-	 * Add the top-level admin menu page
-	 * @since 0.0.1
-	 */
-	public function add_menu_page() {
-
-		add_menu_page(
-			_x( 'Bookings', 'Title of admin page that lists bookings', RTB_TEXTDOMAIN ),
-			_x( 'Bookings', 'Title of bookings admin menu item', RTB_TEXTDOMAIN ),
-			'manage_bookings',
-			'rtb-bookings',
-			array( $this, 'show_admin_bookings_page' ),
-			'dashicons-calendar',
-			'26.2987'
-		);
-
-	}
-
-	/**
-	 * Display the admin bookings page
-	 * @since 0.0.1
-	 */
-	public function show_admin_bookings_page() {
-
-		require_once( RTB_PLUGIN_DIR . '/includes/WP_List_Table.BookingsTable.class.php' );
-		$bookings_table = new rtbBookingsTable();
-		$bookings_table->prepare_items();
-		?>
-
-		<div class="wrap">
-			<h2><?php _e( 'Restaurant Bookings', RTB_TEXTDOMAIN ); ?></h2>
-			<?php do_action( 'rtb_bookings_table_top' ); ?>
-			<form id="rtb-bookings-table" method="POST" action="">
-				<input type="hidden" name="post_type" value="<?php echo RTB_BOOKING_POST_TYPE; ?>" />
-				<input type="hidden" name="page" value="rtb-bookings">
-
-				<?php $bookings_table->views(); ?>
-				<?php $bookings_table->advanced_filters(); ?>
-				<?php $bookings_table->display(); ?>
-			</form>
-			<?php do_action( 'rtb_bookings_table_btm' ); ?>
-		</div>
-
-		<?php
-	}
-
-	/**
 	 * Append booking form to a post's $content variable
 	 * @since 0.0.1
 	 */
 	function append_to_content( $content ) {
 
-		if ( !is_main_query() || !in_the_loop() ) {
+		if ( !is_main_query() || !in_the_loop() || post_password_required() ) {
 			return $content;
 		}
 
@@ -216,7 +191,7 @@ class rtbInit {
 		}
 
 		global $post;
-		if ( $post->ID !== $this->settings->get_setting( 'booking-page' ) ) {
+		if ( $post->ID != $this->settings->get_setting( 'booking-page' ) ) {
 			return $content;
 		}
 
@@ -229,10 +204,37 @@ class rtbInit {
 	 */
 	public function enqueue_admin_assets() {
 
+		// Use the page reference in $admin_page_hooks because
+		// it changes in SOME hooks when it is translated.
+		// https://core.trac.wordpress.org/ticket/18857
+		global $admin_page_hooks;
+
 		$screen = get_current_screen();
-		if ( $screen->base == 'toplevel_page_rtb-bookings' || $screen->base == 'bookings_page_rtb-settings' || $screen->base == 'bookings_page_rtb-addons' ) {
+		if ( empty( $screen ) || empty( $admin_page_hooks['rtb-bookings'] ) ) {
+			return;
+		}
+
+		if ( $screen->base == 'toplevel_page_rtb-bookings' || $screen->base == $admin_page_hooks['rtb-bookings'] . '_page_rtb-settings' || $screen->base == $admin_page_hooks['rtb-bookings'] . '_page_rtb-addons' ) {
 			wp_enqueue_style( 'rtb-admin', RTB_PLUGIN_URL . '/assets/css/admin.css' );
 			wp_enqueue_script( 'rtb-admin', RTB_PLUGIN_URL . '/assets/js/admin.js', array( 'jquery' ), '', true );
+			wp_localize_script(
+				'rtb-admin',
+				'rtb_admin',
+				array(
+					'nonce'		=> wp_create_nonce( 'rtb-admin' ),
+					'strings'	=> array(
+						'add_booking'		=> __( 'Add Booking', 'restaurant-reservations' ),
+						'edit_booking'		=> __( 'Edit Booking', 'restaurant-reservations' ),
+						'error_unspecified'	=> __( 'An unspecified error occurred. Please try again. If the problem persists, try logging out and logging back in.', 'restaurant-reservations' ),
+					),
+				)
+			);
+		}
+
+		// Enqueue frontend assets to add/edit bookins on the bookings page
+		if ( $screen->base == 'toplevel_page_rtb-bookings' ) {
+			$this->register_assets();
+			rtb_enqueue_assets();
 		}
 	}
 
@@ -285,7 +287,7 @@ class rtbInit {
 
 		if ( $plugin == RTB_PLUGIN_FNAME ) {
 
-			$links['help'] = '<a href="' . RTB_PLUGIN_URL . '/docs" title="' . __( 'View the help documentation for Restaurant Reservations', RTB_TEXTDOMAIN ) . '">' . __( 'Help', RTB_TEXTDOMAIN ) . '</a>';
+			$links['help'] = '<a href="' . RTB_PLUGIN_URL . '/docs" title="' . __( 'View the help documentation for Restaurant Reservations', 'restaurant-reservations' ) . '">' . __( 'Help', 'restaurant-reservations' ) . '</a>';
 		}
 
 		return $links;
