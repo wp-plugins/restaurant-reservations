@@ -40,17 +40,6 @@ jQuery(document).ready(function ($) {
 				min: true,
 				container: 'body',
 
-				// Workaround bug in current version of pickadate.js
-				// https://github.com/amsul/pickadate.js/issues/609
-				onOpen:			function() {
-					input = document.getElementById( 'rtb-date' );
-					window.scrollTo( 0, input.offsetTop );
-				},
-				onClose:		function() {
-					input = document.getElementById( 'rtb-date' );
-					window.scrollTo( 0, input.offsetTop );
-				},
-
 				// Select the value when loaded if a value has been set
 				onStart: function() {
 					if ( $( '#rtb-date' ).val()	!== '' ) {
@@ -69,17 +58,6 @@ jQuery(document).ready(function ($) {
 				hiddenName: true,
 				interval: parseInt( rtb_pickadate.time_interval, 10 ),
 				container: 'body',
-
-				// Workaround bug in current version of pickadate.js
-				// https://github.com/amsul/pickadate.js/issues/609
-				onOpen:			function() {
-					input = document.getElementById( 'rtb-time' );
-					window.scrollTo( 0, input.offsetTop );
-				},
-				onClose:		function() {
-					input = document.getElementById( 'rtb-time' );
-					window.scrollTo( 0, input.offsetTop );
-				},
 
 				// Select the value when loaded if a value has been set
 				onStart: function() {
@@ -105,6 +83,7 @@ jQuery(document).ready(function ($) {
 			if ( rtb_pickadate.disable_dates.length ) {
 
 				// Update weekday dates if start of the week has been modified
+				var disable_dates = jQuery.extend( true, [], rtb_pickadate.disable_dates );
 				if ( typeof rtb_booking_form.datepicker.component.settings.firstDay == 'number' ) {
 					var weekday_num = 0;
 					for ( var disable_key in rtb_pickadate.disable_dates ) {
@@ -113,12 +92,12 @@ jQuery(document).ready(function ($) {
 							if ( weekday_num < 1 ) {
 								weekday_num = 7;
 							}
-							rtb_pickadate.disable_dates[disable_key] = weekday_num;
+							disable_dates[disable_key] =  weekday_num;
 						}
 					}
 				}
 
-				rtb_booking_form.datepicker.set( 'disable', rtb_pickadate.disable_dates );
+				rtb_booking_form.datepicker.set( 'disable', disable_dates );
 			}
 
 			if ( rtb_pickadate.late_bookings === '1440' ) {

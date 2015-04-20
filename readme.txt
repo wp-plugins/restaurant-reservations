@@ -5,7 +5,7 @@ Plugin URL: http://themeofthecrop.com
 Requires at Least: 3.8
 Tested Up To: 4.1
 Tags: restaurant, reservations, bookings, table bookings, restaurant reservation, table reservation
-Stable tag: 1.4.2
+Stable tag: 1.4.3
 License: GPLv2 or later
 Donate link: http://themeofthecrop.com
 
@@ -73,6 +73,10 @@ This is almost always the result of issues with your server and can be caused by
 4. If you're able to receive regular WordPress emails but not booking notifications, check your spam filters or junk mail folders.
 5. If you still haven't found the emails, contact your web host and let them know the date, time and email address where you expected to receive a booking. They should be able to check their logs to see what is happening to the email.
 
+= Can I make the phone number required? =
+
+This is a common request so I have written a small addon to do this for you. [Learn more](http://themeofthecrop.com/2015/01/08/simple-phone-validation-restaurant-reservations/).
+
 = Can I translate the booking form? =
 
 Yes, everything in this plugin can be translated using the standard translation process and software like PoEdit. If you're not familiar with that process, I'd recommend you take a look at the [Loco Translate](https://wordpress.org/plugins/loco-translate/) plugin, which provides a simple interface in your WordPress admin area for translating themes and plugins.
@@ -97,6 +101,16 @@ I'm working on an addon that will allow you to customize the booking form and ad
 10. Access a short guide from your Plugins list to help you get started quickly.
 
 == Changelog ==
+
+= 1.4.3 (2015-04-20) =
+* Add: Datepickers for start/end date filters in admin bookings list
+* Fix: Disabled weekdays get offset when editing bookings
+* Fix: Start/end date filters in admin bookings list
+* Fix: Booking form shouldn't appear on password-protected posts
+* Fix: Dutch translation
+* Updated: Dutch and German translations
+* Updated: pickadate.js lib now at v3.5.6
+
 
 = 1.4.2 (2015-03-31) =
 * Fix: Speed issue if licensed addon active
