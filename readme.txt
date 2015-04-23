@@ -3,9 +3,9 @@ Contributors: NateWr
 Author URI: https://github.com/NateWr
 Plugin URL: http://themeofthecrop.com
 Requires at Least: 3.8
-Tested Up To: 4.1
+Tested Up To: 4.2
 Tags: restaurant, reservations, bookings, table bookings, restaurant reservation, table reservation
-Stable tag: 1.4.4
+Stable tag: 1.4.5
 License: GPLv2 or later
 Donate link: http://themeofthecrop.com
 
@@ -34,6 +34,8 @@ This plugin is part of a group of plugins for restaurants. Check out the [Food a
 There is a short guide to using the plugin in the /docs/ folder. It can be accessed by following the Help link listed under the plugin on the Plugins page in your WordPress admin area. Not sure where that is? The last [screenshot](http://wordpress.org/plugins/restaurant-reservations/screenshots/) for this plugin will show you where to find it.
 
 = Addons =
+[Export Bookings for Restaurant Reservations](http://themeofthecrop.com/plugin/export-bookings-for-restaurant-reservations/?utm_source=Plugin&utm_medium=Plugin%20Description&utm_campaign=Restaurant%20Reservations) - Export your restaurant reservations to PDF and Excel/CSV files.
+
 [MailChimp for Restaurant Reservations](http://themeofthecrop.com/plugin/mailchimp-restaurant-reservations/?utm_source=Plugin&utm_medium=Plugin%20Description&utm_campaign=Restaurant%20Reservations) - Subscribe emails from new restaurant reservations to your MailChimp mailing list.
 
 = Developers =
@@ -101,6 +103,10 @@ I'm working on an addon that will allow you to customize the booking form and ad
 10. Access a short guide from your Plugins list to help you get started quickly.
 
 == Changelog ==
+
+= 1.4.5 (2015-04-23) =
+* Fix: Loading spinner not visible due to 4.2 changes
+* Add: new addon Export Bookings released
 
 = 1.4.4 (2015-04-20) =
 * Fix: low-risk XSS security vulnerability with escaped URLs on admin bookings page
@@ -206,6 +212,9 @@ I'm working on an addon that will allow you to customize the booking form and ad
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.4.5 =
+This update fixes a non-critical issue with the display of the loading spinner in the upcoming 4.2 version of WordPress.
 
 = 1.4.4 =
 This update fixes a low-risk XSS security vulnerability. It is low-risk because in order to exploit this vulnerability a user would need to have access to the bookings management panel in the admin area, which only trusted users should have.
