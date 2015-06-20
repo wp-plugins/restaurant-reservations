@@ -104,7 +104,7 @@ I'm working on an addon that will allow you to customize the booking form and ad
 
 == Changelog ==
 
-= 1.4.5 (2015-06-20) =
+= 1.4.6 (2015-06-20) =
 * Add: Remove old schedule exceptions and sort exceptions by date
 * Add: CSS class indicating type of booking form field
 * Fix: Extended Latin can cause Reply-To email headers to fail in some clients
