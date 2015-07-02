@@ -3,9 +3,9 @@ Contributors: NateWr
 Author URI: https://github.com/NateWr
 Plugin URL: http://themeofthecrop.com
 Requires at Least: 3.8
-Tested Up To: 4.2
+Tested Up To: 4.2.2
 Tags: restaurant, reservations, bookings, table bookings, restaurant reservation, table reservation
-Stable tag: 1.4.5
+Stable tag: 1.4.7
 License: GPLv2 or later
 Donate link: http://themeofthecrop.com
 
@@ -34,6 +34,8 @@ This plugin is part of a group of plugins for restaurants. Check out the [Food a
 There is a short guide to using the plugin in the /docs/ folder. It can be accessed by following the Help link listed under the plugin on the Plugins page in your WordPress admin area. Not sure where that is? The last [screenshot](http://wordpress.org/plugins/restaurant-reservations/screenshots/) for this plugin will show you where to find it.
 
 = Addons =
+[Custom Fields for Restaurant Reservations](http://themeofthecrop.com/plugin/custom-fields-restaurant-reservations/?utm_source=Plugin&utm_medium=Plugin%20Description&utm_campaign=Restaurant%20Reservations) - Add custom fields and edit your booking form with ease.
+
 [Export Bookings for Restaurant Reservations](http://themeofthecrop.com/plugin/export-bookings-for-restaurant-reservations/?utm_source=Plugin&utm_medium=Plugin%20Description&utm_campaign=Restaurant%20Reservations) - Export your restaurant reservations to PDF and Excel/CSV files.
 
 [MailChimp for Restaurant Reservations](http://themeofthecrop.com/plugin/mailchimp-restaurant-reservations/?utm_source=Plugin&utm_medium=Plugin%20Description&utm_campaign=Restaurant%20Reservations) - Subscribe emails from new restaurant reservations to your MailChimp mailing list.
@@ -87,7 +89,7 @@ If you make a translation, please help others out by adding it to the [GitHub re
 
 = I want to add a field to the form. Can I do that? =
 
-I'm working on an addon that will allow you to customize the booking form and add fields through your WordPress admin panel. Until that's ready, the only way to accomplish this is by using the built-in hooks. Developers who are comfortable writing plugins for WordPress can find a rough guide in the answer to [this support request](https://wordpress.org/support/topic/edit-form-label-and-add-input-fields).
+The addon, [Custom Fields for Restaurant Reservations](http://themeofthecrop.com/plugin/custom-fields-restaurant-reservations/?utm_source=Plugin&utm_medium=Plugin%20Description&utm_campaign=Restaurant%20Reservations), will allow you to add a field or modify some of the existing fields of the booking form. Developers who are comfortable coding up plugins for WordPress can add their own fields using the hooks provided. Developers can find a rough guide to coding a custom field in the answer to [this support request](https://wordpress.org/support/topic/edit-form-label-and-add-input-fields).
 
 == Screenshots ==
 
@@ -103,6 +105,22 @@ I'm working on an addon that will allow you to customize the booking form and ad
 10. Access a short guide from your Plugins list to help you get started quickly.
 
 == Changelog ==
+
+= 1.4.7 (2015-07-02) =
+* Add: Spanish translation from Joaqin Sanz Boixader
+* Fix: Sorting of bookings by date and name in list table broken
+* Fix: Custom late bookings values more than one day aren't reflected in date picker
+* Fix: Norwegian doesn't include time picker translation for some strings
+* Updated: German translation from Roland Stumpp
+* Updated: pickadate.js language translations
+
+= 1.4.6 (2015-06-20) =
+* Add: Remove old schedule exceptions and sort exceptions by date
+* Add: CSS class indicating type of booking form field
+* Fix: Extended Latin can cause Reply-To email headers to fail in some clients
+* Fix: PHP Warning when performing bulk or quick action in bookings panel
+* Fix: Message row lingers after booking trashed in admin panel
+* Updated .pot file
 
 = 1.4.5 (2015-04-23) =
 * Fix: Loading spinner not visible due to 4.2 changes
@@ -212,6 +230,12 @@ I'm working on an addon that will allow you to customize the booking form and ad
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.4.7 =
+This update fixes a bug that prevented bookings from being sorted by date or name in the admin panel. It also updates some translations and improves support for custom late bookings values.
+
+= 1.4.6 =
+This update improves compatibility with an upcoming Custom Fields addon. It also fixes some minor bugs with extended Latin characters in emails and the admin list table, and removes expired schedule exceptions.
 
 = 1.4.5 =
 This update fixes a non-critical issue with the display of the loading spinner in the upcoming 4.2 version of WordPress.

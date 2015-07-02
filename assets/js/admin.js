@@ -243,7 +243,12 @@ jQuery(document).ready(function ($) {
 
 			if ( r.success ) {
 
-				cell.parent().fadeOut( 500, function() {
+				var rows = cell.parent();
+				var next = rows.next();
+				if ( next.hasClass( 'message-row' ) ) {
+					rows = rows.add( next );
+				}
+				rows.fadeOut( 500, function() {
 					$(this).remove();
 				});
 
@@ -509,6 +514,9 @@ jQuery(document).ready(function ($) {
 				if ( typeof addon.id === 'undefined' && typeof addon.title === 'undefined' ) {
 					return;
 				}
+
+				// Set campaign parameters for addons
+				addon.url += '?utm_source=Plugin&utm_medium=Addon%20List&utm_campaign=Restaurant%20Reservations';
 
 				var html = '<div class="addon ' + addon.id + '">';
 
