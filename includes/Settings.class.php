@@ -36,10 +36,12 @@ class rtbSettings {
 		'es_ES'	=> 'es_ES',
 		'et_EE'	=> 'et_EE',
 		'eu_ES'	=> 'eu_ES',
+		'fa_IR'	=> 'fa_IR',
 		'fi_FI'	=> 'fi_FI',
 		'fr_FR'	=> 'fr_FR',
 		'gl_ES'	=> 'gl_ES',
 		'he_IL'	=> 'he_IL',
+		'hi_IN'	=> 'hi_IN',
 		'hr_HR'	=> 'hr_HR',
 		'hu_HU'	=> 'hu_HU',
 		'id_ID'	=> 'id_ID',
@@ -47,8 +49,12 @@ class rtbSettings {
 		'it_IT'	=> 'it_IT',
 		'ja_JP'	=> 'ja_JP',
 		'ko_KR'	=> 'ko_KR',
+		'lt_LT'	=> 'lt_LT',
+		'lv_LV'	=> 'lv_LV',
+		'nb_NO'	=> 'nb_NO',
+		'ne_NP'	=> 'ne_NP',
 		'nl_NL'	=> 'nl_NL',
-		'no_NO'	=> 'no_NO',
+		'no_NO'	=> 'no_NO', // Old norwegian translation kept for backwards compatibility
 		'pl_PL'	=> 'pl_PL',
 		'pt_BR'	=> 'pt_BR',
 		'pt_PT'	=> 'pt_PT',
@@ -69,6 +75,9 @@ class rtbSettings {
 		add_action( 'init', array( $this, 'set_defaults' ) );
 
 		add_action( 'init', array( $this, 'load_settings_panel' ) );
+
+		// Order schedule exceptions and remove past exceptions
+		add_filter( 'sanitize_option_rtb-settings', array( $this, 'clean_schedule_exceptions' ), 100 );
 
 	}
 
@@ -209,7 +218,7 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 		require_once( RTB_PLUGIN_DIR . '/lib/simple-admin-pages/simple-admin-pages.php' );
 		$sap = sap_initialize_library(
 			$args = array(
-				'version'       => '2.0.a.8',
+				'version'       => '2.0.a.10',
 				'lib_url'       => RTB_PLUGIN_URL . '/lib/simple-admin-pages/',
 			)
 		);
@@ -884,6 +893,51 @@ Sorry, we could not accomodate your booking request. We\'re full or not open at 
 		}
 
 		return $output;
+	}
+
+	/**
+	 * Sort the schedule exceptions and remove past exceptions before saving
+	 *
+	 * @since 1.4.6
+	 */
+	public function clean_schedule_exceptions( $val ) {
+
+		if ( empty( $val['schedule-closed'] ) ) {
+			return $val;
+		}
+
+		// Sort by date
+		$schedule_closed = $val['schedule-closed'];
+		usort( $schedule_closed, array( $this, 'sort_by_date' ) );
+
+		// Remove exceptions more than a week old
+		$week_ago = time() - 604800;
+		for( $i = 0; $i < count( $schedule_closed ); $i++ ) {
+			if ( strtotime( $schedule_closed[$i]['date'] ) > $week_ago ) {
+				break;
+			}
+		}
+		if ( $i ) {
+			$schedule_closed = array_slice( $schedule_closed, $i );
+		}
+
+		$val['schedule-closed'] = $schedule_closed;
+
+		return $val;
+	}
+
+	/**
+	 * Sort an associative array by the value's date parameter
+	 *
+	 * @usedby self::clean_schedule_exceptions()
+	 * @since 0.1
+	 */
+	public function sort_by_date( $a, $b ) {
+
+		$ad = empty( $a['date'] ) ? 0 : strtotime( $a['date'] );
+		$bd = empty( $b['date'] ) ? 0 : strtotime( $b['date'] );
+
+		return $ad - $bd;
 	}
 
 }
